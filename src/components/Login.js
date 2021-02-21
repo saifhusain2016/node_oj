@@ -21,7 +21,14 @@ const Login = () => {
     return true;
   }
 
-  const handleSubmit = (event) => {
+  const handleSignout = (event) => {
+    event.preventDefault();
+    auth.logout();
+    localStorage.removeItem("token");
+    localStorage.removeItem("expiryDate");
+  };
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     if (!validate()) return;
@@ -35,24 +42,31 @@ const Login = () => {
       }),
     };
 
-    const login = async () => {
-      const response = await fetch("http://localhost:8000/auth/login", req);
-      return {
-        status: response.status,
-        body: await response.json(),
-      };
-    };
+    const response = await fetch("http://localhost:8000/auth/login", req);
+    const res = await response.json();
+    console.log("response : " + response);
+    console.log("res: ", res);
+    const tokenValue = res["token"];
+    console.log(tokenValue);
 
-    login().then((res) => {
-      if (res.status === 200) {
-        alert("Access Granted.. !!!");
-        auth.login();
-      } else {
-        const message = `Invalid Credentials : ${res.body["message"]}`;
-        alert(message);
-        resetInputs();
-      }
-    });
+    if (response.status === 200) {
+      alert("Access Granted.. !!!");
+
+      const remainingMilliseconds = 60 * 60 * 1000;
+      const expiryDate = new Date(new Date().getTime() + remainingMilliseconds);
+      localStorage.setItem("token", tokenValue);
+      localStorage.setItem("expiryDate", expiryDate.toISOString());
+
+      setTimeout(() => {
+        handleSignout();
+      }, remainingMilliseconds);
+
+      resetInputs();
+      auth.login();
+    } else {
+      const message = "Invalid Credentials";
+      alert(message);
+    }
   };
 
   return (

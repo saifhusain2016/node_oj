@@ -47,7 +47,7 @@ const Signup = () => {
   };
 
   return (
-    <div className="App">
+    <div className="App div2">
       <h1>Sign up Registration Page</h1>
       <div className="flexbox">
         <div>

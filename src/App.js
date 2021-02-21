@@ -9,9 +9,11 @@ import {
 import HomePage from "./components/HomePage.js";
 import { AuthContext } from "./context/auth-context";
 import { useState } from "react";
+import { getNodeText } from "@testing-library/react";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isSession, setIsSession] = useState(false);
 
   const login = () => {
     setIsLoggedIn(true);
@@ -19,11 +21,43 @@ function App() {
 
   const logout = () => {
     setIsLoggedIn(false);
+    setIsSession(false);
+    localStorage.removeItem("token");
+    localStorage.removeItem("expiryDate");
   };
 
-  let routes;
+  async function getSession() {
+    const tokenValue = await ("Bearer " + localStorage.getItem("token"));
+    const request = {
+      method: "GET",
+      headers: {
+        Authorization: tokenValue,
+      },
+    };
 
-  if (isLoggedIn) {
+    const response = await fetch("http://localhost:8000/auth/session", request);
+    const res = await response.json();
+
+    console.log("response: ", res);
+    console.log("response status: ", response.status);
+
+    if (response.status === 200) {
+      console.log("status code is 200");
+      login();
+      return true;
+    } else {
+      console.log("status code is 500");
+      logout();
+      return false;
+    }
+  }
+
+  getSession().then((result) => setIsSession(result));
+
+  let routes;
+  if (isSession || isLoggedIn) {
+    console.log("session : ", isSession);
+    console.log("isloggedin : ", isLoggedIn);
     routes = (
       <Switch>
         <Route path="/" exact>
